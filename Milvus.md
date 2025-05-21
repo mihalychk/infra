@@ -118,8 +118,15 @@ Run subsequent commands as your non-root `<USER>`.
 Create a Podman pod to hold all Milvus-related containers:
 
 ```bash
-podman pod create --name milvus-pod -p 19530:19530 -p 9091:9091 -p 9001:9001 -p 9000:9000 -p 2379:2379
+podman pod create --name milvus-pod -p 2379:2379 -p 9000:9000 -p 9001:9001 -p 19530:19530
 ```
+
+Summary of Use:
+
+- 2379 is used internally by Milvus to communicate with Etcd (distributed metadata storage) via Client API.
+- 9000 is required by Milvus to interact with Minio for object storage; also available for S3-compatible tools.
+- 9001 port allows you to access the Minio web dashboard from your browser.
+- 19530 is required by applications/clients to interface with Milvus (gRPC protocol).
 
 ## 7. Set Up Milvus Dependencies
 
