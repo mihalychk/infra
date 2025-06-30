@@ -455,6 +455,7 @@ sudo rc-service podman-preparation start
 sudo rc-service etcd start
 sudo rc-service minio start
 sudo rc-service milvus start
+sudo rc-service attu start
 ```
 
 Or, simply reboot to have OpenRC launch them in the required order.
