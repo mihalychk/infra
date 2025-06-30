@@ -340,6 +340,7 @@ start() {
             -e MINIO_REGION=us-east-1 \
             -e ETCD_ENDPOINTS=etcd:2379 \
             -e MINIO_ADDRESS=minio:9000 \
+            -e COMMON_SECURITY_AUTHORIZATIONENABLED=true \
             -v /srv/milvus:/var/lib/milvus:Z \
             docker.io/milvusdb/milvus:v2.5.12 \
             milvus run standalone"
