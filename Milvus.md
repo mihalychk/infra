@@ -19,7 +19,7 @@ Uncomment the community line if it is commented out. Save and exit.
 Update the package index and upgrade current packages:
 
 ```bash
-sudo apk update && sudo apk upgrade
+sudo apk update && apk upgrade
 ```
 
 ## 2. Install Required Packages
