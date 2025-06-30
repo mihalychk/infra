@@ -118,12 +118,13 @@ Run subsequent commands as your non-root `<USER>`.
 Create a Podman pod to hold all Milvus-related containers:
 
 ```bash
-podman pod create --name milvus-pod -p 2379:2379 -p 9000:9000 -p 9001:9001 -p 19530:19530
+podman pod create --name milvus-pod -p 2379:2379 -p 3000:3000 -p 9000:9000 -p 9001:9001 -p 19530:19530
 ```
 
 Summary of Use:
 
 - 2379 is used internally by Milvus to communicate with Etcd (distributed metadata storage) via Client API.
+- 3000 is used for Attu, Milvus administrative tool, from your browser.
 - 9000 is required by Milvus to interact with Minio for object storage; also available for S3-compatible tools.
 - 9001 port allows you to access the Minio web dashboard from your browser.
 - 19530 is required by applications/clients to interface with Milvus (gRPC protocol).
@@ -371,6 +372,78 @@ Set executable and enable service:
 sudo chmod +x /etc/init.d/milvus
 sudo rc-update add milvus
 sudo rc-service milvus start
+```
+
+### 7.4 Attu
+
+Create OpenRC Service for Attu:
+
+```bash
+sudo vi /etc/init.d/attu
+```
+
+Paste the following, replacing `<USER>` as appropriate:
+
+```bash
+#!/sbin/openrc-run
+
+name="attu"
+user="<USER>"
+description="Attu Container"
+extra_started_commands="status logs"
+command_background="no"
+
+depend() {
+    need net
+    after firewall
+    after podman-preparation
+    after milvus
+}
+
+start() {
+    ebegin "Starting ${name} as ${user}"
+    export HOME=$(getent passwd ${user} | cut -d: -f6)
+
+    if su -s /bin/sh ${user} -c "podman container exists ${name}"; then
+        su -s /bin/sh ${user} -c "podman start ${name}"
+    else
+        su -s /bin/sh ${user} -c "podman run --name ${name} \
+            --restart=on-failure \
+            --pod milvus-pod \
+            -d \
+            -e MILVUS_URL='milvus:19530' \
+            -e ATTU_LOG_LEVEL=error \
+            -e ATTU_ACCESS_LOG=false \
+            docker.io/zilliz/attu:v2.4"
+    fi
+
+    eend $?
+}
+
+stop() {
+    ebegin "Stopping ${name}"
+    export HOME=$(getent passwd ${user} | cut -d: -f6)
+    su -s /bin/sh ${user} -c "podman stop ${name}"
+    eend $?
+}
+
+status() {
+    export HOME=$(getent passwd ${user} | cut -d: -f6)
+    su -s /bin/sh ${user} -c "podman ps -f name=${name}"
+}
+
+logs() {
+    export HOME=$(getent passwd ${user} | cut -d: -f6)
+    su -s /bin/sh ${user} -c "podman logs ${name}"
+}
+```
+
+Set executable and enable service:
+
+```bash
+sudo chmod +x /etc/init.d/attu
+sudo rc-update add attu
+sudo rc-service attu start
 ```
 
 ## Order of Services
